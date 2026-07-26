@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Detect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet">
+    <style>
+      :root {
+        --bg: #fafafa;
+        --panel: #ffffff;
+        --border: #e5e5e5;
+        --ink: #111111;
+        --muted: #8a8a8a;
+        --accent: #111111;
+        --live: #16a34a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        padding: 64px 24px 80px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+
+      header h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.6rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+        margin: 0 0 10px;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        letter-spacing: 0.2px;
+      }
+
+      .grid {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+        flex-wrap: wrap;
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        width: 470px;
+        overflow: hidden;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 22px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-head .title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-family: 'Space Grotesk', monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+
+      .status-pill.live {
+        color: var(--live);
+      }
+
+      .status-pill.live .status-dot {
+        background: var(--live);
+        animation: pulse 1.6s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+        }
+
+        70% {
+          box-shadow: 0 0 0 7px rgba(22, 163, 74, 0);
+        }
+
+        100% {
+          box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+        }
+      }
+
+      .media {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #0d0d0d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        color: #6b6b6b;
+        cursor: pointer;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .placeholder .play-circle {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 1px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: #ddd;
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+
+      .placeholder:hover .play-circle {
+        border-color: #fff;
+        color: #fff;
+      }
+
+      .placeholder span {
+        font-family: 'Space Grotesk', monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 22px;
+      }
+
+      .caption {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-family: 'Space Grotesk', monospace;
+      }
+
+      .btn {
+        border: 1px solid var(--ink);
+        background: transparent;
+        color: var(--ink);
+        padding: 8px 18px;
+        border-radius: 2px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .btn.start:hover {
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .btn.stop {
+        border-color: #d33;
+        color: #d33;
+      }
+
+      .btn.stop:hover {
+        background: #d33;
+        color: #fff;
+      }
+
+      .btn.capture {
+        border-color: #16a34a;
+        color: #16a34a;
+      }
+
+      .btn.capture:hover {
+        background: #16a34a;
+        color: #fff;
+      }
+
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .row-solo {
+        max-width: 470px;
+        margin: 24px auto 0;
+      }
+
+      .capture-result {
+        display: none;
+        border-top: 1px solid var(--border);
+        padding: 18px 22px 22px;
+      }
+
+      .capture-result.show {
+        display: block;
+      }
+
+      .capture-result .cap-label {
+        font-family: 'Space Grotesk', monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .capture-thumbs {
+        display: flex;
+        gap: 12px;
+      }
+
+      .capture-thumbs figure {
+        margin: 0;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .capture-thumbs img {
+        width: 100%;
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        background: #0d0d0d;
+      }
+
+      .capture-thumbs figcaption {
+        margin-top: 6px;
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <header>
+      <h1>Vehicle Detect</h1>
+      <p>Click a box to start its live camera feed </p>
+    </header>
+
+    <div class="grid">
+
+      <!-- Box 1: Bike / Vehicle Classification -->
+      <div class="card">
+        <div class="card-head">
+          <div class="title">Vehicle Classification</div>
+          <div class="status-pill" id="status-classify"><span class="status-dot"></span><span>Idle</span></div>
+        </div>
+        <div class="media" id="media-classify">
+          <div class="placeholder" onclick="startFeed('classify')">
+            <div class="play-circle">▶</div>
+            <span>Start classification</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <div class="caption">Classify Vehicles</div>
+          <button class="btn start" id="btn-classify" onclick="toggleFeed('classify')">Start</button>
+        </div>
+      </div>
+
+      <!-- Box 2: Speed Detection -->
+      <div class="card">
+        <div class="card-head">
+          <div class="title">Speed Detection</div>
+          <div class="status-pill" id="status-speed"><span class="status-dot"></span><span>Idle</span></div>
+        </div>
+        <div class="media" id="media-speed">
+          <div class="placeholder" onclick="startFeed('speed')">
+            <div class="play-circle">▶</div>
+            <span>Start tracking</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <div class="caption">rough estimate </div>
+          <button class="btn start" id="btn-speed" onclick="toggleFeed('speed')">Start</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row-solo">
+      <!-- Box 3: License Plate Capture -->
+      <div class="card">
+        <div class="card-head">
+          <div class="title">License Plate Capture</div>
+          <div class="status-pill" id="status-plate"><span class="status-dot"></span><span>Idle</span></div>
+        </div>
+        <div class="media" id="media-plate">
+          <div class="placeholder" onclick="startFeed('plate')">
+            <div class="play-circle">▶</div>
+            <span>Start scanning</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <div class="caption">highlights plate, then snap a photo</div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn capture" id="btn-capture" onclick="capturePlate()" disabled>Capture</button>
+            <button class="btn start" id="btn-plate" onclick="toggleFeed('plate')">Start</button>
+          </div>
+        </div>
+        <div class="capture-result" id="capture-result">
+          <div class="cap-label" id="capture-status">No capture yet</div>
+          <div class="capture-thumbs">
+            <figure>
+              <img id="capture-full" src="" alt="Captured frame">
+              <figcaption>Full frame</figcaption>
+            </figure>
+            <figure>
+              <img id="capture-crop" src="" alt="Plate close-up" style="display:none;">
+              <figcaption id="capture-crop-caption" style="display:none;">Plate close-up</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const FEED_URLS = {
+        classify: "{{ url_for('video_feed_classify') }}",
+        speed: "{{ url_for('video_feed_speed') }}",
+        plate: "{{ url_for('video_feed_plate') }}"
+      };
+      const active = { classify: false, speed: false, plate: false };
+
+      function startFeed(key) {
+        if (active[key]) return;
+        activateFeed(key);
+      }
+
+      function toggleFeed(key) {
+        if (active[key]) {
+          deactivateFeed(key);
+        } else {
+          activateFeed(key);
+        }
+      }
+
+      function activateFeed(key) {
+        const media = document.getElementById('media-' + key);
+        const btn = document.getElementById('btn-' + key);
+        const status = document.getElementById('status-' + key);
+
+        media.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = FEED_URLS[key] + '?t=' + Date.now();
+        media.appendChild(img);
+
+        btn.textContent = 'Stop';
+        btn.classList.remove('start');
+        btn.classList.add('stop');
+
+        status.classList.add('live');
+        status.querySelector('span:last-child').textContent = 'Live';
+
+        active[key] = true;
+
+        if (key === 'plate') {
+          document.getElementById('btn-capture').disabled = false;
+        }
+      }
+
+      function deactivateFeed(key) {
+        const media = document.getElementById('media-' + key);
+        const btn = document.getElementById('btn-' + key);
+        const status = document.getElementById('status-' + key);
+        const labels = { classify: 'classification', speed: 'tracking', plate: 'scanning' };
+
+        media.innerHTML = `
+      <div class="placeholder" onclick="startFeed('${key}')">
+        <div class="play-circle">▶</div>
+        <span>Start ${labels[key]}</span>
+      </div>`;
+
+        btn.textContent = 'Start';
+        btn.classList.remove('stop');
+        btn.classList.add('start');
+
+        status.classList.remove('live');
+        status.querySelector('span:last-child').textContent = 'Idle';
+
+        active[key] = false;
+
+        if (key === 'plate') {
+          document.getElementById('btn-capture').disabled = true;
+        }
+      }
+
+      async function capturePlate() {
+        const btn = document.getElementById('btn-capture');
+        const resultBox = document.getElementById('capture-result');
+        const statusLine = document.getElementById('capture-status');
+
+        btn.disabled = true;
+        btn.textContent = 'Capturing...';
+
+        try {
+          const res = await fetch('/capture_plate', { method: 'POST' });
+          const data = await res.json();
+
+          if (!data.success) {
+            statusLine.textContent = data.error || 'Capture failed.';
+            resultBox.classList.add('show');
+            return;
+          }
+
+          const fullImg = document.getElementById('capture-full');
+          const cropImg = document.getElementById('capture-crop');
+          const cropCaption = document.getElementById('capture-crop-caption');
+
+          fullImg.src = data.full_image_url + '?t=' + Date.now();
+
+          if (data.plate_image_url) {
+            cropImg.src = data.plate_image_url + '?t=' + Date.now();
+            cropImg.style.display = 'block';
+            cropCaption.style.display = 'block';
+            statusLine.textContent = `${data.plates_found} plate(s) detected — saved.`;
+          } else {
+            cropImg.style.display = 'none';
+            cropCaption.style.display = 'none';
+            statusLine.textContent = 'No plate detected — full frame saved.';
+          }
+
+          resultBox.classList.add('show');
+        } catch (err) {
+          statusLine.textContent = 'Capture request failed.';
+          resultBox.classList.add('show');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Capture';
+        }
+      }
+    </script>
+
+  </body>
+
+</html>
